@@ -1,0 +1,17 @@
+{
+  "name": "jgtbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Janne Liuhtonen",
+  "license": "MIT",
+  "dependencies": {
+    "baconjs": "^0.7.70",
+    "moment": "^2.10.3",
+    "ramda": "^0.15.1",
+    "superagent": "^1.2.0"
+  }
+}
