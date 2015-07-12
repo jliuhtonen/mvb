@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-babel-node index.js
+npm install && babel-node index.js
