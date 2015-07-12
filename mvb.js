@@ -1,7 +1,6 @@
 const config = require('./config')
 const Bacon = require('baconjs')
 const request = require('superagent')
-const R = require('ramda')
 
 const longPollDurationSeconds = 60
 const apiUrl = `https://api.telegram.org/bot${config.authToken}`
@@ -22,7 +21,7 @@ const getUpdates = (sinceUpdateId, callback) => {
 const latestUpdateIds = new Bacon.Bus()
 const lastUpdateId = latestUpdateIds.toProperty(0)
 
-const updateResponses = lastUpdateId.flatMapLatest((lastUpdate) => Bacon.fromNodeCallback(getUpdates, lastUpdate + 1))
+const updateResponses = lastUpdateId.flatMapLatest((lastUpdate) => Bacon.fromNodeCallback(getUpdates, lastUpdate))
 
 updateResponses.onError(console.error.bind(this))
 
@@ -34,19 +33,24 @@ const updateIdWithResponse = lastUpdateId.combine(okUpdates, (id, response) => {
     id: id,
     response: response
   }
-})
+}).changes()
+
+updateIdWithResponse.log()
 
 const receivedLatestUpdateIds = updateIdWithResponse.map((responseData) => {
   const { id, response } = responseData
+  const resultCount = response.result.length
 
-  if (response.result.length > 0) { 
-    return R.last(response.result).update_id
+  if (resultCount > 0) { 
+    return response.result[resultCount - 1].update_id + 1
   } else {
     return id
   }
 })
 
-latestUpdateIds.plug(receivedLatestUpdateIds)
+const currentUpdateIdOnError = updateResponses.errors().mapError(lastUpdateId)
+const nextUpdateIdOnResponse = receivedLatestUpdateIds.merge(currentUpdateIdOnError)
+latestUpdateIds.plug(nextUpdateIdOnResponse)
 
 const incomingResults = okUpdates
   .filter((update) => update.result && update.result.length > 0)
