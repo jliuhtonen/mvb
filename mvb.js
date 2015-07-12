@@ -1,6 +1,6 @@
-const config = require('./config')
-const Bacon = require('baconjs')
-const request = require('superagent')
+import * as config from './config'
+import * as Bacon from 'baconjs'
+import * as request from 'superagent'
 
 const longPollDurationSeconds = 60
 const apiUrl = `https://api.telegram.org/bot${config.authToken}`
