@@ -48,7 +48,7 @@ function Mvb() {
     }
   })
 
-  const currentUpdateIdOnError = updateResponses.errors().mapError(lastUpdateId)
+  const currentUpdateIdOnError = lastUpdateId.sampledBy(updateResponses.errors().mapError(true)).throttle(10000)
   const nextUpdateIdOnResponse = receivedLatestUpdateIds.merge(currentUpdateIdOnError)
   latestUpdateIds.plug(nextUpdateIdOnResponse)
 
