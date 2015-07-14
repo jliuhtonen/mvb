@@ -1,6 +1,7 @@
 import config from './config'
 import Bacon from 'baconjs'
 import request from 'superagent'
+import R from 'ramda'
 
 const longPollDurationSeconds = 60
 const errorRetryMillis = 10000
@@ -61,18 +62,28 @@ function Mvb() {
     .flatMapLatest(update => Bacon.fromArray(update.result))
 
   const incomingMessages = incomingResults.filter(result => !!result.message)
+  incomingMessages.log()
 
-  function onMessage(value, handler) {
+  function onCommand(command, handler) {
     return incomingMessages
-      .filter(result => result.message.text.trim() === value)
-      .onValue(result => {
-	const replyFunction = replyMsg => sendMessage(result.message.chat.id, replyMsg)
-	handler(result.message.text, replyFunction) 
+      .filter(result => {
+        const msgText = result.message.text
+	return msgText && msgText.startsWith(`/${command}`)
+      })
+      .map(result => {
+	return {
+	  chatId: result.message.chat.id,
+	  args: R.tail(result.message.text.split(/\s+/))
+	}
+      })
+      .onValue(data => {
+	const replyFunction = replyMsg => sendMessage(data.chatId, replyMsg)
+	handler(data.args, replyFunction) 
       })
   }
 
   return {
-    onMessage: onMessage,
+    onCommand: onCommand,
     sendMessage: sendMessage
   }
 

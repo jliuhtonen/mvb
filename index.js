@@ -4,7 +4,8 @@ const jgtDate = moment("2014-05-14")
 
 const bot = new Mvb()
 
-bot.onMessage('/jgt', (message, reply) => {
+bot.onCommand('jgt', (args, reply) => {
+  console.log(args)
   const daysSinceJgt = moment().diff(jgtDate, 'days')
   const daysSinceJgtMsg = `${daysSinceJgt} päivää JGT`
   reply(daysSinceJgtMsg)
