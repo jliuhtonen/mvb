@@ -26,7 +26,10 @@ function Mvb() {
 
   const updateResponses = lastUpdateId.flatMapLatest(lastUpdate => Bacon.fromNodeCallback(getUpdates, lastUpdate))
 
-  updateResponses.onError(console.error.bind(this))
+  updateResponses.onError(response => {
+    const error = response.error
+    console.error(`Got error ${error.status} when calling ${error.method} ${error.path}`)
+  })
 
   const updates = updateResponses.map(res => res.body)
   const okUpdates = updates.filter(resp => resp.ok)
