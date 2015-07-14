@@ -62,7 +62,6 @@ function Mvb() {
     .flatMapLatest(update => Bacon.fromArray(update.result))
 
   const incomingMessages = incomingResults.filter(result => !!result.message)
-  incomingMessages.log()
 
   function onCommand(command, handler) {
     return incomingMessages
