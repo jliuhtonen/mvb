@@ -29,7 +29,11 @@ function Mvb() {
 
   updateResponses.onError(response => {
     const error = response.error
-    console.error(`Got error ${error.status} when calling ${error.method} ${error.path}`)
+    if (error) {
+      console.error(`Got error ${error.status} when calling ${error.method} ${error.path}`)
+    } else {
+      console.error(response)
+    }
   })
 
   const updates = updateResponses.map(res => res.body)
