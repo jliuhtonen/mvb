@@ -51,7 +51,7 @@ function Mvb() {
     const resultCount = response.result.length
 
     if (resultCount > 0) { 
-      return response.result[resultCount - 1].update_id + 1
+      return R.last(response.result).update_id + 1
     } else {
       return id
     }
