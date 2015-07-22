@@ -4,9 +4,9 @@ Small library for implementing Telegram bots
 
 ## Usage
 
-Register a bot and obtain an authentication token with Telegram
+Register a bot and obtain an authentication token with Telegram, see [introduction to bots](https://core.telegram.org/bots).
 
-Create a Mvb instance with your token
+Create a Mvb instance with your token:
 
 ```javascript
 import Mvb from 'mvb'
@@ -14,7 +14,7 @@ import Mvb from 'mvb'
 const helloBot = new Mvb("myAuthToken")
 ```
 
-Create a command handler with `onCommand`. 
+Create a command handler with `onCommand`: 
 
 ```javascript
 const unsubscribeFn = helloBot.onCommand('hello', (args, replyFn) => {
