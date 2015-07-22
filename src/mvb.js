@@ -1,26 +1,15 @@
-import config from './config'
 import Bacon from 'baconjs'
 import request from 'superagent'
 import R from 'ramda'
 
 const longPollDurationSeconds = 60
 const errorRetryMillis = 10000
-const apiUrl = `https://api.telegram.org/bot${config.authToken}`
-const updatesUrl = `${apiUrl}/getUpdates`
-const sendMessageUrl = `${apiUrl}/sendMessage`
 
-function sendMessage(chatId, message) {
-  const text = encodeURIComponent(message)
-  const url = `${sendMessageUrl}?chat_id=${chatId}&text=${text}`
-  request.post(url).end()
-}
+export default function(authToken) {
 
-function getUpdates(sinceUpdateId, callback) {
-  const url = `${updatesUrl}?timeout=${longPollDurationSeconds}&offset=${sinceUpdateId}`
-  request.get(url).end(callback)
-}
-
-function Mvb() {
+  const apiUrl = `https://api.telegram.org/bot${authToken}`
+  const updatesUrl = `${apiUrl}/getUpdates`
+  const sendMessageUrl = `${apiUrl}/sendMessage`
 
   const latestUpdateIds = new Bacon.Bus()
   const lastUpdateId = latestUpdateIds.toProperty(0)
@@ -85,11 +74,20 @@ function Mvb() {
       })
   }
 
-  return {
-    onCommand: onCommand,
-    sendMessage: sendMessage
+  function sendMessage(chatId, message) {
+    const text = encodeURIComponent(message)
+    const url = `${sendMessageUrl}?chat_id=${chatId}&text=${text}`
+    request.post(url).end()
   }
 
-}
+  function getUpdates(sinceUpdateId, callback) {
+    const url = `${updatesUrl}?timeout=${longPollDurationSeconds}&offset=${sinceUpdateId}`
+    request.get(url).end(callback)
+  }
 
-module.exports = Mvb
+  return Object.freeze({
+    onCommand: onCommand,
+    sendMessage: sendMessage
+  })
+
+}
