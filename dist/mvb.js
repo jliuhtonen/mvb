@@ -1,83 +1,103 @@
-import Bacon from 'baconjs';
-import request from 'superagent';
-import R from 'ramda';
+"use strict";
 
-const longPollDurationSeconds = 60;
-const errorRetryMillis = 10000;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = _default;
 
-export default function (authToken) {
+var _baconjs = _interopRequireDefault(require("baconjs"));
 
-  const apiUrl = `https://api.telegram.org/bot${authToken}`;
-  const updatesUrl = `${apiUrl}/getUpdates`;
-  const sendMessageUrl = `${apiUrl}/sendMessage`;
+var _superagent = _interopRequireDefault(require("superagent"));
 
-  const latestUpdateIds = new Bacon.Bus();
-  const lastUpdateId = latestUpdateIds.toProperty(0);
+var _ramda = _interopRequireDefault(require("ramda"));
 
-  const updateResponses = lastUpdateId.flatMapLatest(lastUpdate => Bacon.fromNodeCallback(getUpdates, lastUpdate));
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-  updateResponses.onError(response => {
-    const error = response.error;
+var longPollDurationSeconds = 60;
+var errorRetryMillis = 10000;
+
+function _default(authToken) {
+  var apiUrl = "https://api.telegram.org/bot".concat(authToken);
+  var updatesUrl = "".concat(apiUrl, "/getUpdates");
+  var sendMessageUrl = "".concat(apiUrl, "/sendMessage");
+  var latestUpdateIds = new _baconjs.default.Bus();
+  var lastUpdateId = latestUpdateIds.toProperty(0);
+  var updateResponses = lastUpdateId.flatMapLatest(function (lastUpdate) {
+    return _baconjs.default.fromNodeCallback(getUpdates, lastUpdate);
+  });
+  updateResponses.onError(function (response) {
+    var error = response.error;
+
     if (error) {
-      console.error(`Got error ${error.status} when calling ${error.method} ${error.path}`);
+      console.error("Got error ".concat(error.status, " when calling ").concat(error.method, " ").concat(error.path));
     } else {
       console.error(response);
     }
   });
-
-  const updates = updateResponses.map(res => res.body);
-  const okUpdates = updates.filter(resp => resp.ok);
-
-  const updateIdWithResponse = lastUpdateId.combine(okUpdates, (id, response) => {
+  var updates = updateResponses.map(function (res) {
+    return res.body;
+  });
+  var okUpdates = updates.filter(function (resp) {
+    return resp.ok;
+  });
+  var updateIdWithResponse = lastUpdateId.combine(okUpdates, function (id, response) {
     return {
       id: id,
       response: response
     };
   }).changes();
-
-  const receivedLatestUpdateIds = updateIdWithResponse.map(responseData => {
-    const { id, response } = responseData;
-    const resultCount = response.result.length;
+  var receivedLatestUpdateIds = updateIdWithResponse.map(function (responseData) {
+    var id = responseData.id,
+        response = responseData.response;
+    var resultCount = response.result.length;
 
     if (resultCount > 0) {
-      return R.last(response.result).update_id + 1;
+      return _ramda.default.last(response.result).update_id + 1;
     } else {
       return id;
     }
   });
-
-  const currentUpdateIdOnError = lastUpdateId.sampledBy(updateResponses.errors().mapError(true)).throttle(errorRetryMillis);
-  const nextUpdateIdOnResponse = receivedLatestUpdateIds.merge(currentUpdateIdOnError);
+  var currentUpdateIdOnError = lastUpdateId.sampledBy(updateResponses.errors().mapError(true)).throttle(errorRetryMillis);
+  var nextUpdateIdOnResponse = receivedLatestUpdateIds.merge(currentUpdateIdOnError);
   latestUpdateIds.plug(nextUpdateIdOnResponse);
-
-  const incomingResults = okUpdates.filter(update => update.result && update.result.length > 0).flatMapLatest(update => Bacon.fromArray(update.result));
-
-  const incomingMessages = incomingResults.filter(result => !!result.message);
+  var incomingResults = okUpdates.filter(function (update) {
+    return update.result && update.result.length > 0;
+  }).flatMapLatest(function (update) {
+    return _baconjs.default.fromArray(update.result);
+  });
+  var incomingMessages = incomingResults.filter(function (result) {
+    return !!result.message;
+  });
 
   function onCommand(command, handler) {
-    return incomingMessages.filter(result => {
-      const msgText = result.message.text;
-      return msgText && msgText.startsWith(`/${command}`);
-    }).map(result => {
+    return incomingMessages.filter(function (result) {
+      var msgText = result.message.text;
+      return msgText && msgText.startsWith("/".concat(command));
+    }).map(function (result) {
       return {
         chatId: result.message.chat.id,
-        args: R.tail(result.message.text.split(/\s+/))
+        args: _ramda.default.tail(result.message.text.split(/\s+/))
       };
-    }).onValue(data => {
-      const replyFunction = replyMsg => sendMessage(data.chatId, replyMsg);
+    }).onValue(function (data) {
+      var replyFunction = function replyFunction(replyMsg) {
+        return sendMessage(data.chatId, replyMsg);
+      };
+
       handler(data.args, replyFunction);
     });
   }
 
   function sendMessage(chatId, message) {
-    const text = encodeURIComponent(message);
-    const url = `${sendMessageUrl}?chat_id=${chatId}&text=${text}`;
-    request.post(url).end();
+    var text = encodeURIComponent(message);
+    var url = "".concat(sendMessageUrl, "?chat_id=").concat(chatId, "&text=").concat(text);
+
+    _superagent.default.post(url).end();
   }
 
   function getUpdates(sinceUpdateId, callback) {
-    const url = `${updatesUrl}?timeout=${longPollDurationSeconds}&offset=${sinceUpdateId}`;
-    request.get(url).end(callback);
+    var url = "".concat(updatesUrl, "?timeout=").concat(longPollDurationSeconds, "&offset=").concat(sinceUpdateId);
+
+    _superagent.default.get(url).end(callback);
   }
 
   return Object.freeze({
