@@ -9,8 +9,8 @@
   "author": "Janne Liuhtonen",
   "license": "MIT",
   "dependencies": {
-    "baconjs": "^0.7.70",
-    "ramda": "^0.16.0",
-    "superagent": "^1.2.0"
+    "baconjs": "^2.0.9",
+    "ramda": "^0.25.0",
+    "superagent": "^3.8.3"
   }
 }
