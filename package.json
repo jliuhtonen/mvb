@@ -12,5 +12,8 @@
     "baconjs": "^2.0.9",
     "ramda": "^0.25.0",
     "superagent": "^3.8.3"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0"
   }
 }
