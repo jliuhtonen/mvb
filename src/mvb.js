@@ -46,8 +46,10 @@ export default function(authToken) {
     }
   })
 
-  const currentUpdateIdOnError = lastUpdateId.sampledBy(updateResponses.errors().mapError(true)).throttle(errorRetryMillis)
-  const nextUpdateIdOnResponse = receivedLatestUpdateIds.merge(currentUpdateIdOnError)
+  const errors = updateResponses.errors().mapError(true)
+
+  const currentUpdateIdOnError = lastUpdateId.sampledBy(errors).throttle(errorRetryMillis)
+  const nextUpdateIdOnResponse = receivedLatestUpdateIds.toEventStream().merge(currentUpdateIdOnError.toEventStream())
   latestUpdateIds.plug(nextUpdateIdOnResponse)
 
   const incomingResults = okUpdates

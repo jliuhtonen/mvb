@@ -57,8 +57,9 @@ function _default(authToken) {
       return id;
     }
   });
-  var currentUpdateIdOnError = lastUpdateId.sampledBy(updateResponses.errors().mapError(true)).throttle(errorRetryMillis);
-  var nextUpdateIdOnResponse = receivedLatestUpdateIds.merge(currentUpdateIdOnError);
+  var errors = updateResponses.errors().mapError(true);
+  var currentUpdateIdOnError = lastUpdateId.sampledBy(errors).throttle(errorRetryMillis);
+  var nextUpdateIdOnResponse = receivedLatestUpdateIds.toEventStream().merge(currentUpdateIdOnError.toEventStream());
   latestUpdateIds.plug(nextUpdateIdOnResponse);
   var incomingResults = okUpdates.filter(function (update) {
     return update.result && update.result.length > 0;
